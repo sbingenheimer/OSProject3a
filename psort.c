@@ -28,7 +28,7 @@ if (input == MAP_FAILED){
     return -1;
 }
 
-
+printf("test");
 
 
     
