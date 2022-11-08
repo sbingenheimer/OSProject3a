@@ -82,12 +82,6 @@ close(fd);
 
 uint size = fdstat.st_size;
 
-/*key_block *keyblockarr;
-keyblockarr = malloc(size * sizeof(key_block));
-key_block *keys = keyblockarr;*/
-
-//CHANGED THIS UP!!!!!!!!
-//key_block keys[size/100];
 key_block * keys;
 keys = malloc (size/100*sizeof(key_block));
 int count = 0;
@@ -99,20 +93,46 @@ for (char* i = input; i < input + size; i += 100){
 }
 //set up buckets before threading, each int array holds an array keys
 //each bucket holds values between each max value. THIS WORKS FOR CERTAIN
-key_block bucket1keys[size/100] ;
-key_block bucket2keys[size/100] ;
-key_block bucket3keys[size/100] ;
-key_block bucket4keys[size/100] ;
+key_block *bucket1keys;
+key_block *bucket2keys;
+key_block *bucket3keys;
+key_block *bucket4keys;
+
+key_block *bucket5keys;
+key_block *bucket6keys;
+key_block *bucket7keys;
+key_block *bucket8keys;
+bucket1keys = malloc (size/100*sizeof(key_block));
+bucket2keys = malloc (size/100*sizeof(key_block));
+bucket3keys = malloc (size/100*sizeof(key_block));
+bucket4keys = malloc (size/100*sizeof(key_block));
+
+bucket5keys = malloc (size/100*sizeof(key_block));
+bucket6keys = malloc (size/100*sizeof(key_block));
+bucket7keys = malloc (size/100*sizeof(key_block));
+bucket8keys = malloc (size/100*sizeof(key_block));
 
 //max meaning bucket 1 holds values between -2147483648 and -2147483648/2
 // bucket 2 holds -2147483648/2 to 0 exc.
-long bucket1max = -2147483648/2;
-long bucket2max = 0;
-long bucket3max = 2147483648/2;
+long bucket1max = 4294967296/8;
+long bucket2max = 4294967296/4;
+long bucket3max = 4294967296*3/8;
+long bucket4max = 4294967296/2;
+
+long bucket5max = 4294967296*5/8;
+long bucket6max = 4294967296*3/4;
+long bucket7max = 4294967296*7/8;
+
 int count1 = 0;
 int count2 = 0;
 int count3 = 0;
 int count4 = 0;
+
+int count5 = 0;
+int count6 = 0;
+int count7 = 0;
+int count8 = 0;
+
 for (uint p = 0; p < size; p+=100){
     if (keys[p/100].key < bucket1max){
         bucket1keys[count1].key = keys[p/100].key;
@@ -132,45 +152,38 @@ for (uint p = 0; p < size; p+=100){
         count3++;
         continue;
     }
-    
+    if (keys[p/100].key < bucket4max){
         bucket4keys[count4].key = keys[p/100].key;
         bucket4keys[count4].block = keys[p/100].block;
         count4++;
+        continue;
+    }
+    
+
+    
+    if (keys[p/100].key < bucket5max){
+        bucket5keys[count5].key = keys[p/100].key;
+        bucket5keys[count5].block = keys[p/100].block;
+        count5++;
+        continue;
+    }
+    if (keys[p/100].key < bucket6max){
+        bucket6keys[count6].key = keys[p/100].key;
+        bucket6keys[count6].block = keys[p/100].block;
+        count6++;
+        continue;
+    }
+    if (keys[p/100].key < bucket7max){
+        bucket7keys[count7].key = keys[p/100].key;
+        bucket7keys[count7].block = keys[p/100].block;
+        count7++;
+        continue;
+    }        
+        bucket8keys[count8].key = keys[p/100].key;
+        bucket8keys[count8].block = keys[p/100].block;
+        count8++;
     
 }
-
-//Uncomment this if you want to see the buckets before sorting
-
-/*
-int i =0;
-printf("Bucket 1: \n");
-while(bucket1keys[i].key != NULL){
-   printf("%d\n", bucket1keys[i].key);
-   i++;
-}
-i=0;
-printf("Bucket 2: \n");
-while(bucket2keys[i].key != NULL){
-   printf("%d\n", bucket2keys[i].key);
-    i++;
-}
-i=0;
-printf("Bucket 3: \n");
-while(bucket3keys[i].key != NULL){
-   printf("%d\n", bucket3keys[i].key);
-    i++;
-}
-i=0;
-printf("Bucket 4: \n");
-while(bucket4keys[i].key != NULL){
-   printf("%d\n", bucket4keys[i].key);
-    i++;
-}
-*/
-
-// This returns the num processors, which is how many threads we should use, and how many buckets
-// For me this returned 4, which is why I set up 4 buckets, hopefully it does for you as wel
-
 
 //This is where threading should happen, right now I just have non-parallel calls
 //to sort for proof that it works before threading
@@ -179,6 +192,11 @@ pthread_t thread1;
 pthread_t thread2;
 pthread_t thread3;
 pthread_t thread4;
+
+pthread_t thread5;
+pthread_t thread6;
+pthread_t thread7;
+pthread_t thread8;
 
 
 struct thread_args args1;
@@ -194,6 +212,18 @@ struct thread_args args4;
 args4.bucket = bucket4keys;
 args4.count = count4;
 
+struct thread_args args5;
+args5.bucket = bucket5keys;
+args5.count = count5;
+struct thread_args args6;
+args6.bucket = bucket6keys;
+args6.count = count4;
+struct thread_args args7;
+args7.bucket = bucket7keys;
+args7.count = count7;
+struct thread_args args8;
+args8.bucket = bucket8keys;
+args8.count = count8;
 
 
 pthread_create(&thread1, NULL, myThreadSort, (void *)&args1);
@@ -201,6 +231,10 @@ pthread_create(&thread2, NULL, myThreadSort, (void *)&args2);
 pthread_create(&thread3, NULL, myThreadSort, (void *)&args3);
 pthread_create(&thread4, NULL, myThreadSort, (void *)&args4);
 
+pthread_create(&thread5, NULL, myThreadSort, (void *)&args5);
+pthread_create(&thread6, NULL, myThreadSort, (void *)&args6);
+pthread_create(&thread7, NULL, myThreadSort, (void *)&args7);
+pthread_create(&thread8, NULL, myThreadSort, (void *)&args8);
 
 
 
@@ -209,43 +243,11 @@ pthread_join(thread2, NULL);
 pthread_join(thread3, NULL);
 pthread_join(thread4, NULL);
 
+pthread_join(thread5, NULL);
+pthread_join(thread6, NULL);
+pthread_join(thread7, NULL);
+pthread_join(thread8, NULL);
 
-
-
-
-
-
-//We need these 4 functions threaded so they all happen at the same time
-/*
-sorti(bucket1keys, count1);
-sorti(bucket2keys, count2);
-sorti(bucket3keys, count3);
-sorti(bucket4keys, count4);
-*/
-
-//Temporary output for sorting proof
-
-/*
-int i=0;
-while(args1.bucket[i].key != '\0' && count1!=0){
-   printf("%d\n", args1.bucket[i].key);
-   i++;
-}
-i=0;
-while(args2.bucket[i].key  != '\0' && count2!=0){
-   printf("%d\n", args2.bucket[i].key);
-   i++;
-}
-i=0;
-while(args3.bucket[i].key != '\0' && count3!=0){
-   printf("%d\n", args3.bucket[i].key);
-   i++;
-}
-i=0;
-while(args4.bucket[i].key != '\0' && count4!=0){
-   printf("%d\n", args4.bucket[i].key);
-   i++;
-}*/
 
 //write. Assuming we sort the array of structs can change later if not
 int fp = open(argv[2], O_WRONLY | O_CREAT | O_APPEND , S_IWUSR);
@@ -253,21 +255,6 @@ if (fp < 0) {
     printf("Failed to open");
     exit(0);
 }
-
-//tried a bunch of shit getting really weird seg faults. Should be a quick fix general format is done.
-/*
-for (uint q = 0; q < size; q+=100){
-    char * nxt = keyblockarr[q/100].block;
-        int wr = write(fp, &nxt, sizeof(nxt));
-        if (wr < 0){
-            printf("err");
-            exit(1);
-        }
-    
-    }
-*/
-
-
 int y = 0;
 
 while (bucket1keys[y].key != '\0' ){
@@ -314,8 +301,60 @@ while (bucket3keys[y].key != '\0'){
 }
 
 y = 0;
-while (bucket4keys[y].key != '\0' && count4 != 0){
+while (bucket4keys[y].key != '\0'){
     char * wri = bucket4keys[y].block;
+    //while(t != 100){
+        int wr = write(fp, wri, 100);
+         if (wr < 0){
+            printf("er4r");
+            exit(0);
+        }
+   //     t++;
+    //}
+    y++;
+}
+y = 0;
+while (bucket5keys[y].key != '\0'){
+    char * wri = bucket5keys[y].block;
+    //while(t != 100){
+        int wr = write(fp, wri, 100);
+         if (wr < 0){
+            printf("er4r");
+            exit(0);
+        }
+   //     t++;
+    //}
+    y++;
+}
+y = 0;
+while (bucket6keys[y].key != '\0'){
+    char * wri = bucket6keys[y].block;
+    //while(t != 100){
+        int wr = write(fp, wri, 100);
+         if (wr < 0){
+            printf("er4r");
+            exit(0);
+        }
+   //     t++;
+    //}
+    y++;
+}
+y = 0;
+while (bucket7keys[y].key != '\0'){
+    char * wri = bucket7keys[y].block;
+    //while(t != 100){
+        int wr = write(fp, wri, 100);
+         if (wr < 0){
+            printf("er4r");
+            exit(0);
+        }
+   //     t++;
+    //}
+    y++;
+}
+y = 0;
+while (bucket8keys[y].key != '\0'){
+    char * wri = bucket8keys[y].block;
     //while(t != 100){
         int wr = write(fp, wri, 100);
          if (wr < 0){
